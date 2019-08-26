@@ -58,7 +58,7 @@ let comment_success = (data) => {
 }
 
 let comment_error = (err) => {
-  let sms_text = `Added the following task with ID ${added_task.id}. 
+  let sms_text = `Added the following task with ID ${added_task.id}.
 
   ${added_task.content}
 
