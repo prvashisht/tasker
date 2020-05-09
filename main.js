@@ -3,7 +3,7 @@ const { JSDOM } = jsdom;
 const { window } = new JSDOM();
 const { document } = (new JSDOM('')).window;
 global.document = document;
-const constants = require('./constants'); // for now, constants.js contains just as hash global_keys_hash to mimic tasker's global variables
+const constants = require('./constants');
 
 let global_keys_hash = constants.global_keys_hash;
 jQuery = require('jquery')(window);
@@ -15,6 +15,12 @@ const local_keys_hash = {};
 
 exports.global = (key) => {
   return global_keys_hash[key];
+}
+
+exports.setGlobal = (key, value) => {
+  global_keys_hash[key] = value;
+  console.log('please add global ', key, ' as ', value);
+  return { ...global_keys_hash };
 }
 
 exports.setLocal = (key, value) => {

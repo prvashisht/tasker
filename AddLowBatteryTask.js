@@ -5,6 +5,10 @@ project_id = parseInt(project_id)
 // Setting variable android_bluetooth_device_extra_battery_level to bt_battery for better code
 bt_battery = parseInt(bt_battery)
 
+if (bt_battery > 30) {
+  setGlobal('%TD_HEADPHONE_BATTERY_TASK', '');
+}
+
 let get_uuid = () => {
   let d = new Date().getTime();
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -33,9 +37,12 @@ let make_call = (type, url, headers, data, success, error) => {
   });
 }
 
-let task_success = (data) => {
-  if (data.id) {
+let task_success = (data, responsetxt, response) => {
+  if (data && data.id) {
     flash('successfully added task "'+ data.content +'"')
+    setGlobal('%TD_HEADPHONE_BATTERY_TASK', data.id.toString());
+  } else if (response.status == 204) {
+    flash('successfully updated reminder task');
   } else {
     flash("some error")
   }
@@ -56,9 +63,32 @@ let add_task = (content, due_string) => {
   make_call("POST", url, headers, data, success, error);
 }
 
+let update_task = (task_id) => {
+  let url = base_url + 'tasks/' + task_id,
+    headers = get_headers(),
+    data = JSON.stringify({}),
+    success = task_data => {
+      if (task_data && task_data.id && !task_data.complete) {
+        let content = "!! " + task_data.content.toUpperCase(),
+          priority = task_data.priority + 1 <= 4 ? task_data.priority + 1 : 4;
+          data_to_send = { content : content, priority: priority },
+          data = JSON.stringify(data_to_send);
+        make_call("POST", url, headers, data, task_success, error);
+      }
+    },
+    error = task_error;
+
+  make_call("GET", url, headers, {}, success, error);
+}
+
 let content = "Headset battery low - " + bt_battery + "%",
   due_string = "tod";
 
-if (bt_battery > 0 && bt_battery < 110) {
-  add_task(content, due_string);
+if (bt_battery > 0 && bt_battery <= 30) {
+  let task_id = global('%TD_HEADPHONE_BATTERY_TASK');
+  if (task_id) {
+    update_task(task_id)
+  } else {
+    add_task(content, due_string);
+  }
 }
